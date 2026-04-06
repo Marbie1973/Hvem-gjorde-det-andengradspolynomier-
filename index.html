@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="da">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Parabelmysteriet</title>
   <style>
     * { box-sizing: border-box; }
@@ -15,7 +15,7 @@
     }
 
     .container {
-      max-width: 1180px;
+      max-width: 1150px;
       margin: 0 auto;
       padding: 24px 16px 40px;
     }
@@ -42,23 +42,6 @@
       line-height: 1.6;
       max-width: 850px;
       margin: 0 auto;
-    }
-
-    .pill-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
-      margin-top: 16px;
-    }
-
-    .pill {
-      background: #eef2ff;
-      color: #3730a3;
-      padding: 10px 14px;
-      border-radius: 999px;
-      font-weight: 700;
-      font-size: 0.95rem;
     }
 
     .stats {
@@ -94,7 +77,7 @@
     }
 
     .question-title {
-      font-size: 1.5rem;
+      font-size: 1.45rem;
       margin-bottom: 8px;
     }
 
@@ -307,16 +290,7 @@
         <div class="lead">
           En lærer på Rysensteen har lavet ballade. I skal opklare
           <strong>hvem</strong>, <strong>hvor</strong> og <strong>hvordan</strong>.
-          Hver gang I løser en parabelopgave, får I et spor, som udelukker mistænkte,
-          steder og metoder.
-        </div>
-
-        <div class="pill-row">
-          <div class="pill">a, b og c</div>
-          <div class="pill">b som hældning ved y-aksen</div>
-          <div class="pill">aflæsning af toppunkt</div>
-          <div class="pill">beregning af toppunkt</div>
-          <div class="pill">rødder</div>
+          Hvert rigtigt svar giver et spor, som udelukker nogle muligheder.
         </div>
 
         <div class="stats">
@@ -329,7 +303,7 @@
             <div class="stat-value" id="scoreCount">0</div>
           </div>
           <div class="stat-box">
-            <div class="stat-label">Mistænkte tilbage</div>
+            <div class="stat-label">Lærere tilbage</div>
             <div class="stat-value" id="suspectsLeft">14</div>
           </div>
           <div class="stat-box">
@@ -339,7 +313,7 @@
         </div>
 
         <div class="feedback neutral" id="feedback">
-          Første spørgsmål vælges tilfældigt. Løs opgaverne og saml spor.
+          Første spørgsmål vælges tilfældigt. Klik på et svar for at komme i gang.
         </div>
       </div>
 
@@ -366,12 +340,10 @@
         <div class="card">
           <div class="case-title">Sagsmappe</div>
 
-          <div class="clue-box" id="clueBox">
-            Ingen spor endnu.
-          </div>
+          <div class="clue-box" id="clueBox">Ingen spor endnu.</div>
 
           <div class="category">
-            <h3>Mistænkte</h3>
+            <h3>Lærere</h3>
             <div class="tag-list" id="suspectList"></div>
           </div>
 
@@ -386,8 +358,8 @@
           </div>
 
           <div class="final-panel" id="finalPanel">
-            <h3>Nu skal I drage den endelige konklusion</h3>
-            <p>Vælg jeres bud på lærer, sted og metode.</p>
+            <h3>Jeres endelige løsning</h3>
+            <p>Vælg lærer, sted og metode.</p>
 
             <div class="final-grid">
               <div>
@@ -445,11 +417,51 @@
 
     const PRAISE = [
       "Flot! Det spor passer.",
-      "Yes! Endnu en vigtig ledetråd.",
+      "Yes! Endnu en ledetråd.",
       "Super godt! I snævrer feltet ind.",
-      "Stærkt arbejde! Sagen er ved at falde på plads.",
-      "Imponerende! Nu er det tid til den endelige konklusion."
+      "Stærkt arbejde! Nu er der ikke mange muligheder tilbage.",
+      "Fantastisk! Nu skal I løse mysteriet."
     ];
+
+    let tasks = [];
+    let solution = null;
+    let currentTaskIndex = 0;
+    let score = 0;
+    let eliminatedTeachers = [];
+    let eliminatedPlaces = [];
+    let eliminatedMethods = [];
+    let clueTexts = [];
+
+    const feedbackEl = document.getElementById("feedback");
+    const progressCountEl = document.getElementById("progressCount");
+    const scoreCountEl = document.getElementById("scoreCount");
+    const suspectsLeftEl = document.getElementById("suspectsLeft");
+    const placesLeftEl = document.getElementById("placesLeft");
+
+    const questionTitleEl = document.getElementById("questionTitle");
+    const questionTextEl = document.getElementById("questionText");
+    const equationBoxEl = document.getElementById("equationBox");
+    const equationTextEl = document.getElementById("equationText");
+    const graphBoxEl = document.getElementById("graphBox");
+    const optionsEl = document.getElementById("options");
+
+    const clueBoxEl = document.getElementById("clueBox");
+    const suspectListEl = document.getElementById("suspectList");
+    const placeListEl = document.getElementById("placeList");
+    const methodListEl = document.getElementById("methodList");
+
+    const finalPanelEl = document.getElementById("finalPanel");
+    const guessSuspectEl = document.getElementById("guessSuspect");
+    const guessPlaceEl = document.getElementById("guessPlace");
+    const guessMethodEl = document.getElementById("guessMethod");
+
+    const gameScreenEl = document.getElementById("gameScreen");
+    const endScreenEl = document.getElementById("endScreen");
+    const endPraiseEl = document.getElementById("endPraise");
+    const solutionTextEl = document.getElementById("solutionText");
+
+    const canvas = document.getElementById("graph");
+    const ctx = canvas.getContext("2d");
 
     function shuffle(array) {
       const arr = [...array];
@@ -464,256 +476,122 @@
       return array[Math.floor(Math.random() * array.length)];
     }
 
-    function partition(array, sizes) {
-      const result = [];
-      let index = 0;
-      for (const size of sizes) {
-        result.push(array.slice(index, index + size));
-        index += size;
-      }
-      return result;
-    }
-
-    function makeOptions(correctText, wrongTexts) {
-      return shuffle([
-        { text: correctText, correct: true },
-        ...wrongTexts.map(t => ({ text: t, correct: false }))
-      ]);
-    }
-
-    function getTaskBank() {
-      return {
-        abc: [
-          {
-            title: "Spor om a, b og c",
-            text: "Hvilken påstand om koefficienten a i f(x)=ax²+bx+c er rigtig?",
-            equation: "f(x) = ax² + bx + c",
-            options: makeOptions(
-              "a bestemmer, om parablen vender opad eller nedad, og hvor smal eller bred den er.",
-              [
-                "a er skæringen med y-aksen.",
-                "a er antallet af rødder.",
-                "a er toppunktets y-koordinat."
-              ]
-            )
-          },
-          {
-            title: "Spor om a, b og c",
-            text: "Hvilken påstand om koefficienten c i f(x)=ax²+bx+c er rigtig?",
-            equation: "f(x) = ax² + bx + c",
-            options: makeOptions(
-              "c er skæringen med y-aksen.",
-              [
-                "c er hældningen på tangenten ved y-aksen.",
-                "c bestemmer alene parablens åbning.",
-                "c er toppunktets x-koordinat."
-              ]
-            )
-          }
-        ],
-        slope: [
-          {
-            title: "Spor om b",
-            text: "I funktionen f(x)=2x²-3x+5 er b lig tangentens hældning til parablen på y-aksen. Hvad er hældningen?",
-            equation: "f(x) = 2x² - 3x + 5",
-            options: makeOptions("-3", ["2", "5", "3"])
-          },
-          {
-            title: "Spor om b",
-            text: "I funktionen f(x)=-x²+4x-1 er b lig tangentens hældning til parablen på y-aksen. Hvad er hældningen?",
-            equation: "f(x) = -x² + 4x - 1",
-            options: makeOptions("4", ["-1", "-4", "1"])
-          }
-        ],
-        readVertex: [
-          {
-            title: "Spor om toppunkt",
-            text: "Aflæs toppunktet på parablen i koordinatsystemet.",
-            graph: { a: -1, h: 2, k: 4 },
-            options: makeOptions("(2, 4)", ["(4, 2)", "(2, -4)", "(-2, 4)"])
-          },
-          {
-            title: "Spor om toppunkt",
-            text: "Aflæs toppunktet på parablen i koordinatsystemet.",
-            graph: { a: 1, h: -3, k: -2 },
-            options: makeOptions("(-3, -2)", ["(-2, -3)", "(3, -2)", "(-3, 2)"])
-          }
-        ],
-        calcVertex: [
-          {
-            title: "Spor om beregning af toppunkt",
-            text: "Bestem toppunktet for funktionen f(x)=x²-6x+5.",
-            equation: "f(x) = x² - 6x + 5",
-            options: makeOptions("(3, -4)", ["(3, 4)", "(-3, -4)", "(6, 5)"])
-          },
-          {
-            title: "Spor om beregning af toppunkt",
-            text: "Bestem toppunktet for funktionen f(x)=-x²+4x+1.",
-            equation: "f(x) = -x² + 4x + 1",
-            options: makeOptions("(2, 5)", ["(2, -5)", "(-2, 5)", "(4, 1)"])
-          }
-        ],
-        roots: [
-          {
-            title: "Spor om rødder",
-            text: "For funktionen f(x)=x²-4x+3: Hvor mange rødder har funktionen, og hvad er rødderne?",
-            equation: "f(x) = x² - 4x + 3",
-            options: makeOptions(
-              "To rødder: x = 1 og x = 3",
-              ["Ingen rødder", "Én rod: x = 2", "To rødder: x = -1 og x = -3"]
-            )
-          },
-          {
-            title: "Spor om rødder",
-            text: "For funktionen f(x)=x²+4x+5: Hvor mange reelle rødder har funktionen?",
-            equation: "f(x) = x² + 4x + 5",
-            options: makeOptions(
-              "Ingen reelle rødder",
-              ["Én rod", "To rødder: x = -1 og x = -5", "To rødder: x = 1 og x = 5"]
-            )
-          }
-        ]
-      };
-    }
-
-    function chooseTasks() {
-      const bank = getTaskBank();
-      const selected = [
-        sampleOne(bank.abc),
-        sampleOne(bank.slope),
-        sampleOne(bank.readVertex),
-        sampleOne(bank.calcVertex),
-        sampleOne(bank.roots)
-      ];
-      return shuffle(selected);
-    }
-
-    function buildCase() {
-      const culprit = sampleOne(TEACHERS);
-      const place = sampleOne(PLACES);
-      const method = sampleOne(METHODS);
-
-      const otherTeachers = shuffle(TEACHERS.filter(x => x !== culprit));
-      const otherPlaces = shuffle(PLACES.filter(x => x !== place));
-      const otherMethods = shuffle(METHODS.filter(x => x !== method));
-
-      const teacherGroups = partition(otherTeachers, [3, 3, 3, 2, 2]);
-      const placeSlots = [[], [], [], [], []];
-      const methodSlots = [[], [], [], [], []];
-
-      shuffle([0,1,2,3,4]).slice(0,4).forEach((slot, i) => placeSlots[slot].push(otherPlaces[i]));
-      shuffle([0,1,2,3,4]).slice(0,4).forEach((slot, i) => methodSlots[slot].push(otherMethods[i]));
-
-      const clues = [];
-      for (let i = 0; i < 5; i++) {
-        clues.push({
-          eliminateTeachers: teacherGroups[i],
-          eliminatePlaces: placeSlots[i],
-          eliminateMethods: methodSlots[i]
-        });
-      }
-
-      return { culprit, place, method, clues };
-    }
-
-    let currentTaskIndex = 0;
-    let score = 0;
-    let tasks = [];
-    let caseData = null;
-    let eliminatedTeachers = [];
-    let eliminatedPlaces = [];
-    let eliminatedMethods = [];
-    let clueTexts = [];
-
-    const feedbackEl = document.getElementById("feedback");
-    const progressCountEl = document.getElementById("progressCount");
-    const scoreCountEl = document.getElementById("scoreCount");
-    const suspectsLeftEl = document.getElementById("suspectsLeft");
-    const placesLeftEl = document.getElementById("placesLeft");
-    const questionTitleEl = document.getElementById("questionTitle");
-    const questionTextEl = document.getElementById("questionText");
-    const equationBoxEl = document.getElementById("equationBox");
-    const equationTextEl = document.getElementById("equationText");
-    const graphBoxEl = document.getElementById("graphBox");
-    const optionsEl = document.getElementById("options");
-    const clueBoxEl = document.getElementById("clueBox");
-    const suspectListEl = document.getElementById("suspectList");
-    const placeListEl = document.getElementById("placeList");
-    const methodListEl = document.getElementById("methodList");
-    const finalPanelEl = document.getElementById("finalPanel");
-    const guessSuspectEl = document.getElementById("guessSuspect");
-    const guessPlaceEl = document.getElementById("guessPlace");
-    const guessMethodEl = document.getElementById("guessMethod");
-    const gameScreenEl = document.getElementById("gameScreen");
-    const endScreenEl = document.getElementById("endScreen");
-    const endPraiseEl = document.getElementById("endPraise");
-    const solutionTextEl = document.getElementById("solutionText");
-
-    const canvas = document.getElementById("graph");
-    const ctx = canvas.getContext("2d");
-
     function setFeedback(text, type) {
       feedbackEl.textContent = text;
       feedbackEl.className = "feedback " + type;
     }
 
-    function remainingTeachers() {
-      return TEACHERS.filter(x => !eliminatedTeachers.includes(x));
+    function makeOptions(correctText, wrongTexts) {
+      return shuffle([
+        { text: correctText, correct: true },
+        ...wrongTexts.map(text => ({ text, correct: false }))
+      ]);
     }
 
-    function remainingPlaces() {
-      return PLACES.filter(x => !eliminatedPlaces.includes(x));
+    function makeTaskBank() {
+      return [
+        {
+          title: "Spor om a",
+          text: "Hvilken påstand om koefficienten a i f(x)=ax²+bx+c er rigtig?",
+          equation: "f(x) = ax² + bx + c",
+          options: makeOptions(
+            "a bestemmer, om parablen vender opad eller nedad, og hvor smal eller bred den er.",
+            [
+              "a er skæringen med y-aksen.",
+              "a er antallet af rødder.",
+              "a er toppunktets y-koordinat."
+            ]
+          )
+        },
+        {
+          title: "Spor om b",
+          text: "I funktionen f(x)=2x²-3x+5 er b lig tangentens hældning til parablen på y-aksen. Hvad er hældningen?",
+          equation: "f(x) = 2x² - 3x + 5",
+          options: makeOptions("-3", ["2", "5", "3"])
+        },
+        {
+          title: "Spor om c",
+          text: "Hvilken betydning har c i f(x)=ax²+bx+c?",
+          equation: "f(x) = ax² + bx + c",
+          options: makeOptions(
+            "c er skæringen med y-aksen.",
+            [
+              "c bestemmer parablens åbning.",
+              "c er toppunktets x-koordinat.",
+              "c er antal rødder."
+            ]
+          )
+        },
+        {
+          title: "Spor om aflæsning af toppunkt",
+          text: "Aflæs toppunktet på parablen i koordinatsystemet.",
+          graph: { a: -1, h: 2, k: 4 },
+          options: makeOptions("(2, 4)", ["(4, 2)", "(2, -4)", "(-2, 4)"])
+        },
+        {
+          title: "Spor om beregning af toppunkt",
+          text: "Bestem toppunktet for funktionen f(x)=x²-6x+5.",
+          equation: "f(x) = x² - 6x + 5",
+          options: makeOptions("(3, -4)", ["(3, 4)", "(-3, -4)", "(6, 5)"])
+        },
+        {
+          title: "Spor om rødder",
+          text: "For funktionen f(x)=x²-4x+3: Hvor mange rødder har funktionen, og hvad er rødderne?",
+          equation: "f(x) = x² - 4x + 3",
+          options: makeOptions(
+            "To rødder: x = 1 og x = 3",
+            [
+              "Ingen rødder",
+              "Én rod: x = 2",
+              "To rødder: x = -1 og x = -3"
+            ]
+          )
+        }
+      ];
     }
 
-    function remainingMethods() {
-      return METHODS.filter(x => !eliminatedMethods.includes(x));
+    function buildSolution() {
+      return {
+        teacher: sampleOne(TEACHERS),
+        place: sampleOne(PLACES),
+        method: sampleOne(METHODS)
+      };
     }
 
-    function updateStats() {
-      progressCountEl.textContent = currentTaskIndex + "/5";
-      scoreCountEl.textContent = score;
-      suspectsLeftEl.textContent = remainingTeachers().length;
-      placesLeftEl.textContent = remainingPlaces().length;
-    }
+    function buildEliminationPlan(solution) {
+      const otherTeachers = shuffle(TEACHERS.filter(x => x !== solution.teacher));
+      const otherPlaces = shuffle(PLACES.filter(x => x !== solution.place));
+      const otherMethods = shuffle(METHODS.filter(x => x !== solution.method));
 
-    function renderTagList(container, allItems, eliminated) {
-      container.innerHTML = "";
-      allItems.forEach(item => {
-        const div = document.createElement("div");
-        div.className = "tag";
-        if (eliminated.includes(item)) div.classList.add("crossed");
-        div.textContent = item;
-        container.appendChild(div);
-      });
-    }
+      const teacherGroups = [
+        otherTeachers.slice(0, 3),
+        otherTeachers.slice(3, 6),
+        otherTeachers.slice(6, 9),
+        otherTeachers.slice(9, 11),
+        otherTeachers.slice(11, 13)
+      ];
 
-    function renderCaseBoard() {
-      renderTagList(suspectListEl, TEACHERS, eliminatedTeachers);
-      renderTagList(placeListEl, PLACES, eliminatedPlaces);
-      renderTagList(methodListEl, METHODS, eliminatedMethods);
-      clueBoxEl.innerHTML = clueTexts.length ? clueTexts.join("<br><br>") : "Ingen spor endnu.";
-    }
+      const placeGroups = [
+        [otherPlaces[0]],
+        [otherPlaces[1]],
+        [otherPlaces[2]],
+        [otherPlaces[3]],
+        []
+      ];
 
-    function populateFinalGuesses() {
-      guessSuspectEl.innerHTML = remainingTeachers().map(x => `<option>${x}</option>`).join("");
-      guessPlaceEl.innerHTML = remainingPlaces().map(x => `<option>${x}</option>`).join("");
-      guessMethodEl.innerHTML = remainingMethods().map(x => `<option>${x}</option>`).join("");
-    }
+      const methodGroups = [
+        [otherMethods[0]],
+        [otherMethods[1]],
+        [otherMethods[2]],
+        [otherMethods[3]],
+        []
+      ];
 
-    function formatClue(clue) {
-      const parts = [];
-
-      if (clue.eliminateTeachers.length) {
-        parts.push("Det var ikke " + clue.eliminateTeachers.join(", ") + ".");
-      }
-      if (clue.eliminatePlaces.length) {
-        parts.push("Det skete ikke i " + clue.eliminatePlaces.join(" eller ") + ".");
-      }
-      if (clue.eliminateMethods.length) {
-        parts.push("Metoden var ikke " + clue.eliminateMethods.join(" eller ") + ".");
-      }
-
-      return parts.join(" ");
+      return [0,1,2,3,4].map(i => ({
+        teachers: teacherGroups[i],
+        places: placeGroups[i],
+        methods: methodGroups[i]
+      }));
     }
 
     function drawGraph(graph) {
@@ -798,6 +676,59 @@
       ctx.stroke();
     }
 
+    function renderTagList(container, items, eliminated) {
+      container.innerHTML = "";
+      items.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "tag";
+        if (eliminated.includes(item)) div.classList.add("crossed");
+        div.textContent = item;
+        container.appendChild(div);
+      });
+    }
+
+    function remainingTeachers() {
+      return TEACHERS.filter(x => !eliminatedTeachers.includes(x));
+    }
+
+    function remainingPlaces() {
+      return PLACES.filter(x => !eliminatedPlaces.includes(x));
+    }
+
+    function remainingMethods() {
+      return METHODS.filter(x => !eliminatedMethods.includes(x));
+    }
+
+    function updateStats() {
+      progressCountEl.textContent = currentTaskIndex + "/5";
+      scoreCountEl.textContent = score;
+      suspectsLeftEl.textContent = remainingTeachers().length;
+      placesLeftEl.textContent = remainingPlaces().length;
+    }
+
+    function renderCaseBoard() {
+      renderTagList(suspectListEl, TEACHERS, eliminatedTeachers);
+      renderTagList(placeListEl, PLACES, eliminatedPlaces);
+      renderTagList(methodListEl, METHODS, eliminatedMethods);
+      clueBoxEl.innerHTML = clueTexts.length ? clueTexts.join("<br><br>") : "Ingen spor endnu.";
+    }
+
+    function clueToText(clue) {
+      const parts = [];
+
+      if (clue.teachers.length) {
+        parts.push("Det var ikke " + clue.teachers.join(", ") + ".");
+      }
+      if (clue.places.length) {
+        parts.push("Det skete ikke i " + clue.places.join(", ") + ".");
+      }
+      if (clue.methods.length) {
+        parts.push("Metoden var ikke " + clue.methods.join(", ") + ".");
+      }
+
+      return parts.join(" ");
+    }
+
     function renderTask() {
       updateStats();
       renderCaseBoard();
@@ -832,36 +763,52 @@
 
     function chooseOption(option) {
       if (!option.correct) {
-        setFeedback("Det spor passer ikke. Prøv igen og tænk en gang mere over parablen.", "error");
+        setFeedback("Det svar passer ikke. Prøv igen.", "error");
         return;
       }
 
       score += 1;
 
-      const clue = caseData.clues[currentTaskIndex];
-      clue.eliminateTeachers.forEach(x => { if (!eliminatedTeachers.includes(x)) eliminatedTeachers.push(x); });
-      clue.eliminatePlaces.forEach(x => { if (!eliminatedPlaces.includes(x)) eliminatedPlaces.push(x); });
-      clue.eliminateMethods.forEach(x => { if (!eliminatedMethods.includes(x)) eliminatedMethods.push(x); });
+      const clue = solution.plan[currentTaskIndex];
 
-      clueTexts.push("<strong>Spor " + (currentTaskIndex + 1) + ":</strong> " + formatClue(clue));
+      clue.teachers.forEach(name => {
+        if (!eliminatedTeachers.includes(name)) eliminatedTeachers.push(name);
+      });
 
-      setFeedback(PRAISE[Math.min(currentTaskIndex, PRAISE.length - 1)], "success");
+      clue.places.forEach(name => {
+        if (!eliminatedPlaces.includes(name)) eliminatedPlaces.push(name);
+      });
+
+      clue.methods.forEach(name => {
+        if (!eliminatedMethods.includes(name)) eliminatedMethods.push(name);
+      });
+
+      clueTexts.push("<strong>Spor " + (currentTaskIndex + 1) + ":</strong> " + clueToText(clue));
+      setFeedback(PRAISE[currentTaskIndex], "success");
 
       currentTaskIndex += 1;
 
       if (currentTaskIndex >= 5) {
-        finalPanelEl.style.display = "block";
-        populateFinalGuesses();
-        optionsEl.innerHTML = "";
-        equationBoxEl.style.display = "none";
-        graphBoxEl.style.display = "none";
-        questionTitleEl.textContent = "Alle spor er fundet";
-        questionTextEl.textContent = "Nu skal I bruge jeres elimineringer og vælge den endelige løsning.";
-        updateStats();
-        renderCaseBoard();
+        showFinalPanel();
       } else {
         setTimeout(renderTask, 700);
       }
+    }
+
+    function showFinalPanel() {
+      updateStats();
+      renderCaseBoard();
+
+      questionTitleEl.textContent = "Alle 5 spor er fundet";
+      questionTextEl.textContent = "Nu skal I vælge den endelige løsning.";
+      equationBoxEl.style.display = "none";
+      graphBoxEl.style.display = "none";
+      optionsEl.innerHTML = "";
+      finalPanelEl.style.display = "block";
+
+      guessSuspectEl.innerHTML = remainingTeachers().map(x => `<option>${x}</option>`).join("");
+      guessPlaceEl.innerHTML = remainingPlaces().map(x => `<option>${x}</option>`).join("");
+      guessMethodEl.innerHTML = remainingMethods().map(x => `<option>${x}</option>`).join("");
     }
 
     function solveMystery() {
@@ -870,42 +817,39 @@
       const methodGuess = guessMethodEl.value;
 
       if (
-        suspectGuess === caseData.culprit &&
-        placeGuess === caseData.place &&
-        methodGuess === caseData.method
+        suspectGuess === solution.teacher &&
+        placeGuess === solution.place &&
+        methodGuess === solution.method
       ) {
         gameScreenEl.style.display = "none";
         endScreenEl.style.display = "block";
-        endPraiseEl.textContent = "Fantastisk arbejde. I brugte alle sporene rigtigt og løste mysteriet.";
-
-        solutionTextEl.innerHTML = `
-          <strong>Skyldig lærer:</strong> ${caseData.culprit}<br>
-          <strong>Sted:</strong> ${caseData.place}<br>
-          <strong>Metode:</strong> ${caseData.method}<br><br>
-          I arbejdede med betydningen af <strong>a, b og c</strong>, brugte at <strong>b</strong> er
-          tangentens hældning ved y-aksen, aflæste og beregnede <strong>toppunkter</strong> og bestemte
-          både <strong>antal rødder</strong> og <strong>selve rødderne</strong>.
-        `;
+        endPraiseEl.textContent = "Fantastisk arbejde. I løste mysteriet ved hjælp af parabler.";
+        solutionTextEl.innerHTML =
+          "<strong>Lærer:</strong> " + solution.teacher + "<br>" +
+          "<strong>Sted:</strong> " + solution.place + "<br>" +
+          "<strong>Metode:</strong> " + solution.method + "<br><br>" +
+          "I brugte viden om a, b og c, toppunkter og rødder til at indsnævre sagen.";
       } else {
-        setFeedback("Det endelige bud passer ikke helt. Brug elimineringerne i sagsmappen en gang til.", "warn");
+        setFeedback("Det bud passer ikke helt. Se på jeres elimineringer igen.", "warn");
       }
     }
 
     function startGame() {
       currentTaskIndex = 0;
       score = 0;
-      tasks = chooseTasks();
-      caseData = buildCase();
       eliminatedTeachers = [];
       eliminatedPlaces = [];
       eliminatedMethods = [];
       clueTexts = [];
-
       finalPanelEl.style.display = "none";
-      gameScreenEl.style.display = "block";
       endScreenEl.style.display = "none";
+      gameScreenEl.style.display = "block";
 
-      setFeedback("Første spørgsmål vælges tilfældigt. Løs opgaverne og saml spor.", "neutral");
+      tasks = shuffle(makeTaskBank()).slice(0, 5);
+      solution = buildSolution();
+      solution.plan = buildEliminationPlan(solution);
+
+      setFeedback("Første spørgsmål vælges tilfældigt. Klik på et svar for at komme i gang.", "neutral");
       renderTask();
     }
 

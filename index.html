@@ -5,9 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Parabelmysteriet</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -17,7 +15,7 @@
     }
 
     .container {
-      max-width: 1100px;
+      max-width: 1150px;
       margin: 0 auto;
       padding: 24px 16px 40px;
     }
@@ -30,9 +28,7 @@
       margin-bottom: 20px;
     }
 
-    h1, h2, h3 {
-      margin-top: 0;
-    }
+    h1, h2, h3 { margin-top: 0; }
 
     h1 {
       text-align: center;
@@ -44,8 +40,25 @@
       text-align: center;
       color: #4b5563;
       line-height: 1.6;
-      max-width: 820px;
+      max-width: 850px;
       margin: 0 auto;
+    }
+
+    .pill-row {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .pill {
+      background: #eef2ff;
+      color: #3730a3;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.95rem;
     }
 
     .stats {
@@ -71,23 +84,6 @@
     .stat-value {
       font-size: 2rem;
       font-weight: bold;
-    }
-
-    .pill-row {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 18px;
-    }
-
-    .pill {
-      background: #eef2ff;
-      color: #3730a3;
-      padding: 10px 14px;
-      border-radius: 999px;
-      font-weight: 700;
-      font-size: 0.95rem;
     }
 
     .main-grid {
@@ -121,6 +117,7 @@
       font-size: 2rem;
       font-weight: bold;
       color: #0f172a;
+      word-break: break-word;
     }
 
     canvas {
@@ -163,20 +160,10 @@
       line-height: 1.45;
     }
 
-    .neutral {
-      background: #eef2ff;
-      color: #3730a3;
-    }
-
-    .success {
-      background: #dcfce7;
-      color: #166534;
-    }
-
-    .error {
-      background: #fee2e2;
-      color: #991b1b;
-    }
+    .neutral { background: #eef2ff; color: #3730a3; }
+    .success { background: #dcfce7; color: #166534; }
+    .error { background: #fee2e2; color: #991b1b; }
+    .warn { background: #fef3c7; color: #92400e; }
 
     .case-board {
       background: #f9fafb;
@@ -204,7 +191,7 @@
       padding: 14px;
       color: #166534;
       font-weight: 700;
-      min-height: 70px;
+      min-height: 80px;
       line-height: 1.5;
     }
 
@@ -303,13 +290,13 @@
       font-weight: 700;
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 920px) {
       .main-grid, .stats {
         grid-template-columns: 1fr;
       }
 
       .equation-big {
-        font-size: 1.6rem;
+        font-size: 1.55rem;
       }
     }
   </style>
@@ -320,9 +307,9 @@
       <div class="card">
         <h1>🕵️ Parabelmysteriet</h1>
         <div class="lead">
-          En lærer har stjålet klassens sidste pose chokoladefrøer. 
-          Kun ved at løse 5 matematiske spor om parabler kan I afsløre den skyldige.
-          Hvert rigtigt svar giver en ny ledetråd.
+          En lærer har stjålet klassens sidste pose chokoladefrøer.
+          Klassen må løse <strong>5 matematiske spor</strong> for at afsløre den skyldige.
+          Hvert rigtigt svar udelukker nogle mistænkte. Først til sidst står én tilbage.
         </div>
 
         <div class="pill-row">
@@ -363,7 +350,7 @@
           </div>
 
           <div class="graph-box" id="graphBox" style="display:none;">
-            <canvas id="graph" width="620" height="420"></canvas>
+            <canvas id="graph" width="640" height="430"></canvas>
           </div>
 
           <div class="options" id="options"></div>
@@ -378,7 +365,8 @@
           <ul class="clue-list">
             <li>Der er 14 mulige lærere i sagen.</li>
             <li>Hvert rigtigt svar giver et nyt spor.</li>
-            <li>Når alle fem spor er løst, afsløres tyven.</li>
+            <li>Ingen bliver afsløret for tidligt.</li>
+            <li>Til sidst står præcis én mistænkt tilbage.</li>
           </ul>
 
           <div class="solved-clues" id="solvedClues">
@@ -430,103 +418,28 @@
       'Trine'
     ];
 
-    const culprit = 'Janne';
-
     const praise = [
       'Flot! Første spor er løst.',
-      'Yes! I er et skridt tættere på tyven.',
+      'Yes! I er et skridt tættere på løsningen.',
       'Super godt! Endnu et spor passer.',
-      'Stærkt arbejde! Mysteriet snævrer ind.',
-      'Imponerende! I er ægte parabeldetektiver.'
+      'Stærkt arbejde! Nu snævrer feltet virkelig ind.',
+      'Imponerende! I løste det sidste spor.'
     ];
 
-    const tasks = [
-      {
-        title: 'Spor 1',
-        text: 'Hvilken betydning har koefficienten a i andengradspolynomiet f(x)=ax²+bx+c?',
-        equation: 'f(x) = ax² + bx + c',
-        options: [
-          {
-            text: 'a bestemmer, om parablen vender opad eller nedad, og hvor smal eller bred den er.',
-            correct: true,
-            clue: 'Tyven er en lærer, der underviser i matematik.',
-            eliminate: ['Anna', 'Anne-Sofie', 'Astrid', 'Henrik', 'Johan', 'Johanne', 'Lotte', 'Mads', 'Malene', 'Marlene', 'Morten', 'Samantha', 'Trine']
-          },
-          { text: 'a er skæringen med y-aksen.', correct: false },
-          { text: 'a er antallet af rødder.', correct: false },
-          { text: 'a er toppunktets x-koordinat.', correct: false }
-        ]
-      },
-      {
-        title: 'Spor 2',
-        text: 'I funktionen f(x)=2x²-3x+5 er b lig tangentens hældning til parablen på y-aksen. Hvad er hældningen?',
-        equation: 'f(x) = 2x² - 3x + 5',
-        options: [
-          {
-            text: '-3',
-            correct: true,
-            clue: 'Tangent-sporet bekræfter, at hældningen ved y-aksen peger på Janne og ingen andre.',
-            eliminate: []
-          },
-          { text: '2', correct: false },
-          { text: '5', correct: false },
-          { text: '3', correct: false }
-        ]
-      },
-      {
-        title: 'Spor 3',
-        text: 'Aflæs toppunktet på parablen i koordinatsystemet.',
-        graph: { a: -1, h: 2, k: 4 },
-        options: [
-          {
-            text: '(2, 4)',
-            correct: true,
-            clue: 'Grafen viser et toppunkt i (2,4). Det passer med næste spor i sagen.',
-            eliminate: []
-          },
-          { text: '(4, 2)', correct: false },
-          { text: '(2, -4)', correct: false },
-          { text: '(-2, 4)', correct: false }
-        ]
-      },
-      {
-        title: 'Spor 4',
-        text: 'Bestem toppunktet for funktionen f(x)=x²-6x+5.',
-        equation: 'f(x) = x² - 6x + 5',
-        options: [
-          {
-            text: '(3, -4)',
-            correct: true,
-            clue: 'Beregningen af toppunktet giver endnu et sikkert spor.',
-            eliminate: []
-          },
-          { text: '(3, 4)', correct: false },
-          { text: '(-3, -4)', correct: false },
-          { text: '(6, 5)', correct: false }
-        ]
-      },
-      {
-        title: 'Spor 5',
-        text: 'For funktionen f(x)=x²-4x+3: Hvor mange rødder har funktionen, og hvad er rødderne?',
-        equation: 'f(x) = x² - 4x + 3',
-        options: [
-          {
-            text: 'To rødder: x = 1 og x = 3',
-            correct: true,
-            clue: 'Det sidste spor falder på plads: Tyven er Janne.',
-            eliminate: []
-          },
-          { text: 'Ingen rødder', correct: false },
-          { text: 'Én rod: x = 2', correct: false },
-          { text: 'To rødder: x = -1 og x = -3', correct: false }
-        ]
-      }
+    const clueTemplates = [
+      names => `Spor: Disse lærere kan udelukkes: ${names.join(', ')}.`,
+      names => `Nyt spor: Følgende mistænkte er uskyldige: ${names.join(', ')}.`,
+      names => `Vidneudsagn: Det kan ikke være ${names.join(', ')}.`,
+      names => `Efterforskningen viser, at ${names.join(', ')} må slettes fra listen.`,
+      names => `Endnu et spor: ${names.join(', ')} er nu udelukket.`
     ];
 
+    let culprit = '';
     let currentTask = 0;
     let score = 0;
     let solvedNotes = [];
     let eliminated = [];
+    let tasks = [];
 
     const feedbackEl = document.getElementById('feedback');
     const progressCountEl = document.getElementById('progressCount');
@@ -548,6 +461,27 @@
 
     const canvas = document.getElementById('graph');
     const ctx = canvas.getContext('2d');
+
+    function randInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function choice(arr) {
+      return arr[randInt(0, arr.length - 1)];
+    }
+
+    function shuffle(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = randInt(0, i);
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function pickDistinct(arr, count) {
+      return shuffle(arr).slice(0, count);
+    }
 
     function setFeedback(text, type) {
       feedbackEl.textContent = text;
@@ -575,6 +509,27 @@
         tag.textContent = name;
         suspectListEl.appendChild(tag);
       });
+    }
+
+    function formatPolyABC(a, b, c) {
+      let s = 'f(x) = ';
+      if (a === 1) s += 'x²';
+      else if (a === -1) s += '-x²';
+      else s += a + 'x²';
+
+      if (b !== 0) {
+        if (b > 0) s += ' + ';
+        else s += ' - ';
+        const absB = Math.abs(b);
+        s += (absB === 1 ? 'x' : absB + 'x');
+      }
+
+      if (c !== 0) {
+        if (c > 0) s += ' + ' + c;
+        else s += ' - ' + Math.abs(c);
+      }
+
+      return s;
     }
 
     function drawGraph(graph) {
@@ -631,17 +586,13 @@
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
       for (let x = minX; x <= maxX; x++) {
-        if (x !== 0) {
-          ctx.fillText(String(x), toX(x), originY + 8);
-        }
+        if (x !== 0) ctx.fillText(String(x), toX(x), originY + 8);
       }
 
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
       for (let y = minY; y <= maxY; y++) {
-        if (y !== 0) {
-          ctx.fillText(String(y), originX + 8, toY(y));
-        }
+        if (y !== 0) ctx.fillText(String(y), originX + 8, toY(y));
       }
 
       ctx.fillText('0', originX + 8, originY + 12);
@@ -661,6 +612,186 @@
         }
       }
       ctx.stroke();
+    }
+
+    function makeClue(eliminatedNames, index) {
+      return clueTemplates[index % clueTemplates.length](eliminatedNames);
+    }
+
+    function buildEliminationPlan() {
+      const innocent = shuffle(suspects.filter(name => name !== culprit));
+      const groupSizes = [3, 3, 3, 2, 2];
+      const groups = [];
+      let start = 0;
+
+      for (const size of groupSizes) {
+        groups.push(innocent.slice(start, start + size));
+        start += size;
+      }
+
+      return groups;
+    }
+
+    function buildTaskMeaningOfABC(eliminateGroup) {
+      const coeff = choice(['a', 'b', 'c']);
+      let correctText = '';
+      let wrong = [];
+      let prompt = `Hvad fortæller koefficienten ${coeff} om andengradspolynomiet f(x)=ax²+bx+c?`;
+
+      if (coeff === 'a') {
+        correctText = 'a bestemmer, om parablen vender opad eller nedad, og hvor smal eller bred den er.';
+        wrong = [
+          'a er skæringen med y-aksen.',
+          'a er altid toppunktets x-koordinat.',
+          'a fortæller alene hvor mange rødder funktionen har.'
+        ];
+      } else if (coeff === 'b') {
+        correctText = 'b påvirker parablens placering og er samtidig tangentens hældning ved y-aksen.';
+        wrong = [
+          'b er altid skæringen med y-aksen.',
+          'b bestemmer alene om parablen åbner opad eller nedad.',
+          'b er gennemsnittet af rødderne.'
+        ];
+      } else {
+        correctText = 'c er skæringen med y-aksen, fordi f(0)=c.';
+        wrong = [
+          'c er altid toppunktets y-koordinat.',
+          'c bestemmer hvor smal parablen er.',
+          'c er tangentens hældning ved y-aksen.'
+        ];
+      }
+
+      return {
+        title: 'Spor 1',
+        text: prompt,
+        equation: 'f(x) = ax² + bx + c',
+        options: shuffle([
+          { text: correctText, correct: true, clue: makeClue(eliminateGroup, 0), eliminate: eliminateGroup },
+          ...wrong.map(t => ({ text: t, correct: false }))
+        ])
+      };
+    }
+
+    function buildTaskSlopeAtYAxis(eliminateGroup) {
+      let a = randInt(-4, 4);
+      while (a === 0) a = randInt(-4, 4);
+      let b = randInt(-6, 6);
+      while (b === 0) b = randInt(-6, 6);
+      const c = randInt(-5, 7);
+
+      const eq = formatPolyABC(a, b, c);
+      const correct = String(b);
+
+      const distractors = shuffle(
+        [...new Set([String(a), String(c), String(-b), String(b + 1), String(b - 1)])]
+          .filter(x => x !== correct)
+      ).slice(0, 3);
+
+      return {
+        title: 'Spor 2',
+        text: 'I denne funktion er b tangentens hældning til parablen på y-aksen. Hvad er hældningen?',
+        equation: eq,
+        options: shuffle([
+          { text: correct, correct: true, clue: makeClue(eliminateGroup, 1), eliminate: eliminateGroup },
+          ...distractors.map(t => ({ text: t, correct: false }))
+        ])
+      };
+    }
+
+    function buildTaskReadVertex(eliminateGroup) {
+      const graph = {
+        a: choice([-1, 1]),
+        h: randInt(-3, 3),
+        k: randInt(-2, 4)
+      };
+
+      const correct = `(${graph.h}, ${graph.k})`;
+      const distractors = shuffle([
+        `(${graph.k}, ${graph.h})`,
+        `(${-graph.h}, ${graph.k})`,
+        `(${graph.h}, ${-graph.k})`,
+        `(${-graph.h}, ${-graph.k})`
+      ].filter(x => x !== correct)).slice(0, 3);
+
+      return {
+        title: 'Spor 3',
+        text: 'Aflæs toppunktet på parablen i koordinatsystemet.',
+        graph,
+        options: shuffle([
+          { text: correct, correct: true, clue: makeClue(eliminateGroup, 2), eliminate: eliminateGroup },
+          ...distractors.map(t => ({ text: t, correct: false }))
+        ])
+      };
+    }
+
+    function buildTaskCalculateVertex(eliminateGroup) {
+      const h = randInt(-4, 4);
+      const k = randInt(-4, 4);
+      const a = choice([1, -1, 2, -2]);
+
+      const b = -2 * a * h;
+      const c = a * h * h + k;
+
+      const eq = formatPolyABC(a, b, c);
+      const correct = `(${h}, ${k})`;
+
+      const distractors = shuffle([
+        `(${k}, ${h})`,
+        `(${-h}, ${k})`,
+        `(${h}, ${-k})`,
+        `(${-h}, ${-k})`
+      ].filter(x => x !== correct)).slice(0, 3);
+
+      return {
+        title: 'Spor 4',
+        text: 'Bestem toppunktet for funktionen.',
+        equation: eq,
+        options: shuffle([
+          { text: correct, correct: true, clue: makeClue(eliminateGroup, 3), eliminate: eliminateGroup },
+          ...distractors.map(t => ({ text: t, correct: false }))
+        ])
+      };
+    }
+
+    function buildTaskRoots(eliminateGroup) {
+      const root1 = randInt(-4, 2);
+      const root2 = randInt(root1 + 1, 5);
+
+      const a = 1;
+      const b = -(root1 + root2);
+      const c = root1 * root2;
+      const eq = formatPolyABC(a, b, c);
+
+      const correct = `To rødder: x = ${root1} og x = ${root2}`;
+      const distractors = shuffle([
+        'Ingen rødder',
+        `Én rod: x = ${Math.round((root1 + root2) / 2)}`,
+        `To rødder: x = ${-root1} og x = ${-root2}`,
+        `To rødder: x = ${root1 - 1} og x = ${root2 + 1}`
+      ].filter(x => x !== correct)).slice(0, 3);
+
+      return {
+        title: 'Spor 5',
+        text: 'Hvor mange rødder har funktionen, og hvad er rødderne?',
+        equation: eq,
+        options: shuffle([
+          { text: correct, correct: true, clue: makeClue(eliminateGroup, 4), eliminate: eliminateGroup },
+          ...distractors.map(t => ({ text: t, correct: false }))
+        ])
+      };
+    }
+
+    function buildGame() {
+      culprit = choice(suspects);
+      const eliminationGroups = buildEliminationPlan();
+
+      tasks = [
+        buildTaskMeaningOfABC(eliminationGroups[0]),
+        buildTaskSlopeAtYAxis(eliminationGroups[1]),
+        buildTaskReadVertex(eliminationGroups[2]),
+        buildTaskCalculateVertex(eliminationGroups[3]),
+        buildTaskRoots(eliminationGroups[4])
+      ];
     }
 
     function renderTask() {
@@ -700,13 +831,9 @@
         score += 1;
         solvedNotes.push('• ' + option.clue);
 
-        if (option.eliminate) {
-          option.eliminate.forEach(name => {
-            if (!eliminated.includes(name)) {
-              eliminated.push(name);
-            }
-          });
-        }
+        option.eliminate.forEach(name => {
+          if (!eliminated.includes(name)) eliminated.push(name);
+        });
 
         setFeedback(praise[Math.min(currentTask, praise.length - 1)], 'success');
         solvedCluesEl.innerHTML = solvedNotes.join('<br>');
@@ -719,40 +846,4 @@
           setTimeout(renderTask, 700);
         }
       } else {
-        setFeedback('Det spor passer ikke. Prøv igen og tænk en gang mere over parablen.', 'error');
-      }
-
-      updateStats();
-      renderSuspects();
-    }
-
-    function finishGame() {
-      gameScreenEl.style.display = 'none';
-      endScreenEl.style.display = 'block';
-      culpritTagEl.textContent = culprit;
-      endPraiseEl.textContent = 'Fantastisk arbejde. I har løst alle fem spor og afsløret tyven.';
-      finalExplanationEl.innerHTML =
-        'I brugte viden om <strong>a, b og c</strong>, fandt <strong>tangentens hældning ved y-aksen</strong>, aflæste og beregnede <strong>toppunkter</strong> og bestemte både <strong>antal rødder</strong> og <strong>selve rødderne</strong>. Alle spor pegede til sidst på <strong>Janne</strong>.';
-    }
-
-    function restartGame() {
-      currentTask = 0;
-      score = 0;
-      solvedNotes = [];
-      eliminated = [];
-
-      solvedCluesEl.textContent = 'Ingen spor fundet endnu.';
-      gameScreenEl.style.display = 'block';
-      endScreenEl.style.display = 'none';
-
-      setFeedback('Løs første spor for at komme i gang med mysteriet.', 'neutral');
-      renderTask();
-    }
-
-    document.getElementById('restartBtn').addEventListener('click', restartGame);
-    document.getElementById('playAgainBtn').addEventListener('click', restartGame);
-
-    restartGame();
-  </script>
-</body>
-</html>
+        setFeedback('Det spor passer ikke. Prøv igen og tænk en gang mere over parablen.', '
